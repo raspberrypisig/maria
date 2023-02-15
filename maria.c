@@ -36,7 +36,7 @@ int main(void)
     const int screenWidth = 800;
     const int screenHeight = 450;
 
-    InitWindow(screenWidth, screenHeight, "raylib [models] example - models loading");
+    InitWindow(screenWidth, screenHeight, "Maria");
 
     // Define the camera to look into our 3d world
     Camera camera = { 0 };    
@@ -58,12 +58,12 @@ int main(void)
 
     Vector3 position = { 0.0f, 0.0f, 0.0f };                    // Set model position
 
-    BoundingBox bounds = GetMeshBoundingBox(model.meshes[0]);   // Set model bounds
+    //BoundingBox bounds = GetMeshBoundingBox(model.meshes[0]);   // Set model bounds
 
     // NOTE: bounds are calculated from the original size of the model,
     // if model is scaled on drawing, bounds must be also scaled
 
-    bool selected = false;          // Selected object flag
+    //bool selected = false;          // Selected object flag
 
     DisableCursor();                // Limit cursor to relative movement inside the window
 
@@ -81,6 +81,7 @@ int main(void)
         //UpdateCamera(&camera, CAMERA_PERSPECTIVE);
 
         // Load new models/textures on drag&drop
+        /*
         if (IsFileDropped())
         {
             FilePathList droppedFiles = LoadDroppedFiles();
@@ -113,7 +114,9 @@ int main(void)
 
             UnloadDroppedFiles(droppedFiles);    // Unload filepaths from memory
         }
+        */
 
+        /*
         // Select model on mouse click
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
@@ -122,6 +125,8 @@ int main(void)
             else selected = false;
         }
         //----------------------------------------------------------------------------------
+        */
+
 
         // Draw
         //----------------------------------------------------------------------------------
@@ -135,16 +140,16 @@ int main(void)
                 DrawModelEx(model, position, (Vector3){ 1.0f, 0.0f, 0.0f }, 0.0f, (Vector3){ 1.75f, 1.75f, 1.75f }, WHITE);
                 DrawGrid(20, 10.0f);         // Draw a grid
 
-                if (selected) DrawBoundingBox(bounds, GREEN);   // Draw selection box
+                //if (selected) DrawBoundingBox(bounds, GREEN);   // Draw selection box
 
             EndMode3D();
             
             DrawText(TextFormat("Camera x:%f y:%f z: %f", camera.position.x, camera.position.y, camera.position.z), 10, GetScreenHeight() - 20, 10, DARKGRAY);
-            if (selected) DrawText("MODEL SELECTED", GetScreenWidth() - 110, 10, 10, GREEN);
+            //if (selected) DrawText("MODEL SELECTED", GetScreenWidth() - 110, 10, 10, GREEN);
 
             DrawText(TextFormat("Target x:%f y:%f z:%f", camera.target.x, camera.target.y, camera.target.z), screenWidth - 200, screenHeight - 20, 10, GRAY);
 
-            DrawFPS(10, 10);
+            //DrawFPS(10, 10);
 
         EndDrawing();
         //----------------------------------------------------------------------------------

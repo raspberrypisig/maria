@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "preLaunchTask": "build",
+            "name": "Launch",
+            "type": "python",
+            "request": "launch",
+            "program": "empty.py"
+        }
+    ]
+}
