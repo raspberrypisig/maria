@@ -48,4 +48,6 @@ Depending on the contents of the Makefile(look for PROJECT_NAME), you should hav
 sudo python -m http.server 80
 ```
 
-Then go to browser, and point to http://<IP>/maria.html
+Then go to browser, and point to http://IP_ADDRESS/maria.html
+
+
