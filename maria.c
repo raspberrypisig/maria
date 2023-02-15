@@ -39,9 +39,11 @@ int main(void)
     InitWindow(screenWidth, screenHeight, "raylib [models] example - models loading");
 
     // Define the camera to look into our 3d world
-    Camera camera = { 0 };
-    camera.position = (Vector3){ 0.0f, 10.0f, 17.0f }; 
-    camera.target = (Vector3){ -10.0f, 20.0f, 0.0f };    
+    Camera camera = { 0 };    
+    camera.position = (Vector3){ 0.178, 6.554, 10.9 }; 
+    camera.target = (Vector3){ 0.92, -0.77, -2.29 }; 
+    //camera.position = (Vector3){ 0.0f, 10.0f, 17.0f }; 
+    //camera.target = (Vector3){ -10.0f, 20.0f, 0.0f };    
     //camera.position = (Vector3){ 20.0f, 30.0f, -60.0f }; // Camera position
     //camera.target = (Vector3){ 0.0f, 0.0f, 60.0f };     // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
@@ -71,9 +73,12 @@ int main(void)
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
+        
+
         // Update
         //----------------------------------------------------------------------------------
-        UpdateCamera(&camera, CAMERA_FIRST_PERSON);
+        //Mohan: Uncomment this when you need to know camera position and target
+        //UpdateCamera(&camera, CAMERA_PERSPECTIVE);
 
         // Load new models/textures on drag&drop
         if (IsFileDropped())
@@ -133,11 +138,11 @@ int main(void)
                 if (selected) DrawBoundingBox(bounds, GREEN);   // Draw selection box
 
             EndMode3D();
-
-            DrawText("Drag & drop model to load mesh/texture.", 10, GetScreenHeight() - 20, 10, DARKGRAY);
+            
+            DrawText(TextFormat("Camera x:%f y:%f z: %f", camera.position.x, camera.position.y, camera.position.z), 10, GetScreenHeight() - 20, 10, DARKGRAY);
             if (selected) DrawText("MODEL SELECTED", GetScreenWidth() - 110, 10, 10, GREEN);
 
-            DrawText("(c) Castle 3D model by Alberto Cano", screenWidth - 200, screenHeight - 20, 10, GRAY);
+            DrawText(TextFormat("Target x:%f y:%f z:%f", camera.target.x, camera.target.y, camera.target.z), screenWidth - 200, screenHeight - 20, 10, GRAY);
 
             DrawFPS(10, 10);
 
