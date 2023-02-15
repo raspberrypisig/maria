@@ -40,16 +40,18 @@ int main(void)
 
     // Define the camera to look into our 3d world
     Camera camera = { 0 };
-    camera.position = (Vector3){ 20.0f, 30.0f, -60.0f }; // Camera position
-    camera.target = (Vector3){ 0.0f, 0.0f, 60.0f };     // Camera looking at point
+    camera.position = (Vector3){ 0.0f, 20.0f, 17.0f }; 
+    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };    
+    //camera.position = (Vector3){ 20.0f, 30.0f, -60.0f }; // Camera position
+    //camera.target = (Vector3){ 0.0f, 0.0f, 60.0f };     // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     camera.fovy = 60.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;                   // Camera mode type
 
-    Model model = LoadModel("resources/models/castle.obj");                 // Load model
-    Texture2D texture = LoadTexture("resources/models/castle.png"); // Load model texture
-    //Model model = LoadModel("resources/models/body_empty.iqm");                 // Load model
-    //Texture2D texture = LoadTexture("resources/models/Base_texture.png");    
+    //Model model = LoadModel("resources/models/castle.obj");                 // Load model
+    //Texture2D texture = LoadTexture("resources/models/castle.png"); // Load model texture
+    Model model = LoadModel("resources/models/body_empty.iqm");                 // Load model
+    Texture2D texture = LoadTexture("resources/models/Base_texture.png");    
     model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;            // Set map diffuse texture
 
     Vector3 position = { 0.0f, 0.0f, 0.0f };                    // Set model position
@@ -124,8 +126,8 @@ int main(void)
 
             BeginMode3D(camera);
 
-                DrawModel(model, position, 1.0f, WHITE);        // Draw 3d model with texture
-
+                //DrawModel(model, position, 1.0f, WHITE);        // Draw 3d model with texture
+                DrawModelEx(model, position, (Vector3){ 1.0f, 0.0f, 0.0f }, 0.0f, (Vector3){ 1.75f, 1.75f, 1.75f }, WHITE);
                 DrawGrid(20, 10.0f);         // Draw a grid
 
                 if (selected) DrawBoundingBox(bounds, GREEN);   // Draw selection box
