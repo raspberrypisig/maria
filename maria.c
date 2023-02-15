@@ -1,293 +1,155 @@
 /*******************************************************************************************
 *
-*   raylib game template
+*   raylib [models] example - Models loading
 *
-*   <Game title>
-*   <Game description>
+*   NOTE: raylib supports multiple models file formats:
 *
-*   This game has been created using raylib (www.raylib.com)
-*   raylib is licensed under an unmodified zlib/libpng license (View raylib.h for details)
+*     - OBJ  > Text file format. Must include vertex position-texcoords-normals information,
+*              if files references some .mtl materials file, it will be loaded (or try to).
+*     - GLTF > Text/binary file format. Includes lot of information and it could
+*              also reference external files, raylib will try loading mesh and materials data.
+*     - IQM  > Binary file format. Includes mesh vertex data but also animation data,
+*              raylib can load .iqm animations.
+*     - VOX  > Binary file format. MagikaVoxel mesh format:
+*              https://github.com/ephtracy/voxel-model/blob/master/MagicaVoxel-file-format-vox.txt
+*     - M3D  > Binary file format. Model 3D format:
+*              https://bztsrc.gitlab.io/model3d
 *
-*   Copyright (c) 2021 Ramon Santamaria (@raysan5)
+*   Example originally created with raylib 2.0, last time updated with raylib 4.2
+*
+*   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
+*   BSD-like license that allows static linking with closed source software
+*
+*   Copyright (c) 2014-2023 Ramon Santamaria (@raysan5)
 *
 ********************************************************************************************/
 
 #include "raylib.h"
-#include "screens.h"    // NOTE: Declares global (extern) variables and screens functions
 
-#if defined(PLATFORM_WEB)
-    #include <emscripten/emscripten.h>
-#endif
-
-//----------------------------------------------------------------------------------
-// Shared Variables Definition (global)
-// NOTE: Those variables are shared between modules through screens.h
-//----------------------------------------------------------------------------------
-GameScreen currentScreen = LOGO;
-Font font = { 0 };
-Music music = { 0 };
-Sound fxCoin = { 0 };
-
-//----------------------------------------------------------------------------------
-// Local Variables Definition (local to this module)
-//----------------------------------------------------------------------------------
-static const int screenWidth = 800;
-static const int screenHeight = 450;
-
-// Required variables to manage screen transitions (fade-in, fade-out)
-static float transAlpha = 0.0f;
-static bool onTransition = false;
-static bool transFadeOut = false;
-static int transFromScreen = -1;
-static GameScreen transToScreen = UNKNOWN;
-
-//----------------------------------------------------------------------------------
-// Local Functions Declaration
-//----------------------------------------------------------------------------------
-static void ChangeToScreen(int screen);     // Change to screen, no transition effect
-
-static void TransitionToScreen(int screen); // Request transition to next screen
-static void UpdateTransition(void);         // Update transition effect
-static void DrawTransition(void);           // Draw transition effect (full-screen rectangle)
-
-static void UpdateDrawFrame(void);          // Update and draw one frame
-
-//----------------------------------------------------------------------------------
-// Main entry point
-//----------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------
+// Program main entry point
+//------------------------------------------------------------------------------------
 int main(void)
 {
     // Initialization
-    //---------------------------------------------------------
-    InitWindow(screenWidth, screenHeight, "raylib game template");
+    //--------------------------------------------------------------------------------------
+    const int screenWidth = 800;
+    const int screenHeight = 450;
 
-    InitAudioDevice();      // Initialize audio device
+    InitWindow(screenWidth, screenHeight, "raylib [models] example - models loading");
 
-    // Load global data (assets that must be available in all screens, i.e. font)
-    font = LoadFont("resources/mecha.png");
-    music = LoadMusicStream("resources/ambient.ogg");
-    fxCoin = LoadSound("resources/coin.wav");
+    // Define the camera to look into our 3d world
+    Camera camera = { 0 };
+    camera.position = (Vector3){ -20.0f, 30.0f, -20.0f }; // Camera position
+    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };     // Camera looking at point
+    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
+    camera.fovy = 60.0f;                                // Camera field-of-view Y
+    camera.projection = CAMERA_PERSPECTIVE;                   // Camera mode type
 
-    SetMusicVolume(music, 1.0f);
-    PlayMusicStream(music);
+    Model model = LoadModel("resources/models/castle.obj");                 // Load model
+    Texture2D texture = LoadTexture("resources/models/castle.png"); // Load model texture
+    //Model model = LoadModel("resources/models/body_empty.iqm");                 // Load model
+    //Texture2D texture = LoadTexture("resources/models/Base_texture.png");    
+    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;            // Set map diffuse texture
 
-    // Setup and init first screen
-    currentScreen = LOGO;
-    InitLogoScreen();
+    Vector3 position = { 0.0f, 0.0f, 0.0f };                    // Set model position
 
-#if defined(PLATFORM_WEB)
-    emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
-#else
-    SetTargetFPS(60);       // Set our game to run at 60 frames-per-second
+    BoundingBox bounds = GetMeshBoundingBox(model.meshes[0]);   // Set model bounds
+
+    // NOTE: bounds are calculated from the original size of the model,
+    // if model is scaled on drawing, bounds must be also scaled
+
+    bool selected = false;          // Selected object flag
+
+    DisableCursor();                // Limit cursor to relative movement inside the window
+
+    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
-        UpdateDrawFrame();
+        // Update
+        //----------------------------------------------------------------------------------
+        UpdateCamera(&camera, CAMERA_FIRST_PERSON);
+
+        // Load new models/textures on drag&drop
+        if (IsFileDropped())
+        {
+            FilePathList droppedFiles = LoadDroppedFiles();
+
+            if (droppedFiles.count == 1) // Only support one file dropped
+            {
+                if (IsFileExtension(droppedFiles.paths[0], ".obj") ||
+                    IsFileExtension(droppedFiles.paths[0], ".gltf") ||
+                    IsFileExtension(droppedFiles.paths[0], ".glb") ||
+                    IsFileExtension(droppedFiles.paths[0], ".vox") ||
+                    IsFileExtension(droppedFiles.paths[0], ".iqm") ||
+                    IsFileExtension(droppedFiles.paths[0], ".m3d"))       // Model file formats supported
+                {
+                    UnloadModel(model);                         // Unload previous model
+                    model = LoadModel(droppedFiles.paths[0]);   // Load new model
+                    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture; // Set current map diffuse texture
+
+                    bounds = GetMeshBoundingBox(model.meshes[0]);
+
+                    // TODO: Move camera position from target enough distance to visualize model properly
+                }
+                else if (IsFileExtension(droppedFiles.paths[0], ".png"))  // Texture file formats supported
+                {
+                    // Unload current model texture and load new one
+                    UnloadTexture(texture);
+                    texture = LoadTexture(droppedFiles.paths[0]);
+                    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+                }
+            }
+
+            UnloadDroppedFiles(droppedFiles);    // Unload filepaths from memory
+        }
+
+        // Select model on mouse click
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            // Check collision between ray and box
+            if (GetRayCollisionBox(GetMouseRay(GetMousePosition(), camera), bounds).hit) selected = !selected;
+            else selected = false;
+        }
+        //----------------------------------------------------------------------------------
+
+        // Draw
+        //----------------------------------------------------------------------------------
+        BeginDrawing();
+
+            ClearBackground(RAYWHITE);
+
+            BeginMode3D(camera);
+
+                DrawModel(model, position, 1.0f, WHITE);        // Draw 3d model with texture
+
+                DrawGrid(20, 10.0f);         // Draw a grid
+
+                if (selected) DrawBoundingBox(bounds, GREEN);   // Draw selection box
+
+            EndMode3D();
+
+            DrawText("Drag & drop model to load mesh/texture.", 10, GetScreenHeight() - 20, 10, DARKGRAY);
+            if (selected) DrawText("MODEL SELECTED", GetScreenWidth() - 110, 10, 10, GREEN);
+
+            DrawText("(c) Castle 3D model by Alberto Cano", screenWidth - 200, screenHeight - 20, 10, GRAY);
+
+            DrawFPS(10, 10);
+
+        EndDrawing();
+        //----------------------------------------------------------------------------------
     }
-#endif
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    // Unload current screen data before closing
-    switch (currentScreen)
-    {
-        case LOGO: UnloadLogoScreen(); break;
-        case TITLE: UnloadTitleScreen(); break;
-        case GAMEPLAY: UnloadGameplayScreen(); break;
-        case ENDING: UnloadEndingScreen(); break;
-        default: break;
-    }
+    UnloadTexture(texture);     // Unload texture
+    UnloadModel(model);         // Unload model
 
-    // Unload global data loaded
-    UnloadFont(font);
-    UnloadMusicStream(music);
-    UnloadSound(fxCoin);
-
-    CloseAudioDevice();     // Close audio context
-
-    CloseWindow();          // Close window and OpenGL context
+    CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
     return 0;
-}
-
-//----------------------------------------------------------------------------------
-// Module specific Functions Definition
-//----------------------------------------------------------------------------------
-// Change to next screen, no transition
-static void ChangeToScreen(GameScreen screen)
-{
-    // Unload current screen
-    switch (currentScreen)
-    {
-        case LOGO: UnloadLogoScreen(); break;
-        case TITLE: UnloadTitleScreen(); break;
-        case GAMEPLAY: UnloadGameplayScreen(); break;
-        case ENDING: UnloadEndingScreen(); break;
-        default: break;
-    }
-
-    // Init next screen
-    switch (screen)
-    {
-        case LOGO: InitLogoScreen(); break;
-        case TITLE: InitTitleScreen(); break;
-        case GAMEPLAY: InitGameplayScreen(); break;
-        case ENDING: InitEndingScreen(); break;
-        default: break;
-    }
-
-    currentScreen = screen;
-}
-
-// Request transition to next screen
-static void TransitionToScreen(GameScreen screen)
-{
-    onTransition = true;
-    transFadeOut = false;
-    transFromScreen = currentScreen;
-    transToScreen = screen;
-    transAlpha = 0.0f;
-}
-
-// Update transition effect (fade-in, fade-out)
-static void UpdateTransition(void)
-{
-    if (!transFadeOut)
-    {
-        transAlpha += 0.05f;
-
-        // NOTE: Due to float internal representation, condition jumps on 1.0f instead of 1.05f
-        // For that reason we compare against 1.01f, to avoid last frame loading stop
-        if (transAlpha > 1.01f)
-        {
-            transAlpha = 1.0f;
-
-            // Unload current screen
-            switch (transFromScreen)
-            {
-                case LOGO: UnloadLogoScreen(); break;
-                case TITLE: UnloadTitleScreen(); break;
-                case OPTIONS: UnloadOptionsScreen(); break;
-                case GAMEPLAY: UnloadGameplayScreen(); break;
-                case ENDING: UnloadEndingScreen(); break;
-                default: break;
-            }
-
-            // Load next screen
-            switch (transToScreen)
-            {
-                case LOGO: InitLogoScreen(); break;
-                case TITLE: InitTitleScreen(); break;
-                case GAMEPLAY: InitGameplayScreen(); break;
-                case ENDING: InitEndingScreen(); break;
-                default: break;
-            }
-
-            currentScreen = transToScreen;
-
-            // Activate fade out effect to next loaded screen
-            transFadeOut = true;
-        }
-    }
-    else  // Transition fade out logic
-    {
-        transAlpha -= 0.02f;
-
-        if (transAlpha < -0.01f)
-        {
-            transAlpha = 0.0f;
-            transFadeOut = false;
-            onTransition = false;
-            transFromScreen = -1;
-            transToScreen = UNKNOWN;
-        }
-    }
-}
-
-// Draw transition effect (full-screen rectangle)
-static void DrawTransition(void)
-{
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, transAlpha));
-}
-
-// Update and draw game frame
-static void UpdateDrawFrame(void)
-{
-    // Update
-    //----------------------------------------------------------------------------------
-    UpdateMusicStream(music);       // NOTE: Music keeps playing between screens
-
-    if (!onTransition)
-    {
-        switch(currentScreen)
-        {
-            case LOGO:
-            {
-                UpdateLogoScreen();
-
-                if (FinishLogoScreen()) TransitionToScreen(TITLE);
-
-            } break;
-            case TITLE:
-            {
-                UpdateTitleScreen();
-
-                if (FinishTitleScreen() == 1) TransitionToScreen(OPTIONS);
-                else if (FinishTitleScreen() == 2) TransitionToScreen(GAMEPLAY);
-
-            } break;
-            case OPTIONS:
-            {
-                UpdateOptionsScreen();
-
-                if (FinishOptionsScreen()) TransitionToScreen(TITLE);
-
-            } break;
-            case GAMEPLAY:
-            {
-                UpdateGameplayScreen();
-
-                if (FinishGameplayScreen() == 1) TransitionToScreen(ENDING);
-                //else if (FinishGameplayScreen() == 2) TransitionToScreen(TITLE);
-
-            } break;
-            case ENDING:
-            {
-                UpdateEndingScreen();
-
-                if (FinishEndingScreen() == 1) TransitionToScreen(TITLE);
-
-            } break;
-            default: break;
-        }
-    }
-    else UpdateTransition();    // Update transition (fade-in, fade-out)
-    //----------------------------------------------------------------------------------
-
-    // Draw
-    //----------------------------------------------------------------------------------
-    BeginDrawing();
-
-        ClearBackground(RAYWHITE);
-
-        switch(currentScreen)
-        {
-            case LOGO: DrawLogoScreen(); break;
-            case TITLE: DrawTitleScreen(); break;
-            case OPTIONS: DrawOptionsScreen(); break;
-            case GAMEPLAY: DrawGameplayScreen(); break;
-            case ENDING: DrawEndingScreen(); break;
-            default: break;
-        }
-
-        // Draw full screen rectangle in front of everything
-        if (onTransition) DrawTransition();
-
-        //DrawFPS(10, 10);
-
-    EndDrawing();
-    //----------------------------------------------------------------------------------
 }
