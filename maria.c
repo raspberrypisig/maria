@@ -13,11 +13,20 @@ Vector3 position = { 0.0f, 0.0f, 0.0f };
 
 int main(void)
 {
-
-
-    InitWindow(screenWidth, screenHeight, "Maria");
+    //InitWindow(screenWidth, screenHeight, "Maria");     
     TraceLog(LOG_INFO, "Maria screen size:%d x %d", screenWidth, screenHeight);
-      
+    //emscripten_run_script("alert('hi')");
+    int x = EM_ASM_INT({
+     return window.screen.width;
+     });
+    int y = EM_ASM_INT({
+     return window.screen.height;
+     });     
+    TraceLog(LOG_INFO, "x screen width from emscriptem: %d", x);
+    TraceLog(LOG_INFO, "y screen width from emscriptem: %d", y);
+    InitWindow(x, y, "Maria");
+    ToggleFullscreen();
+
     camera.position = (Vector3){ 0.0f, 0.0f, -17.0 }; 
     camera.target = (Vector3){ 0.0f, 1.0f, 0.0f };     
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          
@@ -54,6 +63,7 @@ int main(void)
 
 void UpdateDrawFrame()
 {
+
         //UpdateCamera(&camera, CAMERA_THIRD_PERSON);
         //UpdateCamera(&camera, CAMERA_FIRST_PERSON);
         //UpdateCamera(&camera, CAMERA_ORBITAL);
