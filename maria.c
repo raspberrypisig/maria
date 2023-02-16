@@ -68,7 +68,7 @@ void UpdateDrawFrame()
                 rlPushMatrix();
                 rlRotatef(180.0f, 0.0f, 1.0f, 0.0f);
                 //DrawModelEx(model, position, (Vector3){ 1.0f, 0.0f, 0.0f }, 0.0f, (Vector3){ 1.75f, 1.75f, 1.75f }, WHITE);
-                DrawModelEx(model, position, (Vector3){ 1.0f, 0.0f, 0.0f }, 0.0f, (Vector3){ 1.75f, 1.75f, 1.75f }, BLACK);
+                DrawModelEx(model, position, (Vector3){ 1.0f, 0.0f, 0.0f }, 0.0f, (Vector3){ 1.75f, 1.75f, 1.75f }, WHITE);
                 rlPopMatrix();                
                 //DrawGrid(20, 10.0f);
             EndMode3D();
