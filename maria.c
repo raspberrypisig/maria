@@ -16,7 +16,7 @@ int main(void)
 
 
     InitWindow(screenWidth, screenHeight, "Maria");
-
+    TraceLog(LOG_INFO, "Maria screen size:%d x %d", screenWidth, screenHeight);
       
     camera.position = (Vector3){ 0.0f, 0.0f, -17.0 }; 
     camera.target = (Vector3){ 0.0f, 1.0f, 0.0f };     
