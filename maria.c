@@ -62,17 +62,19 @@ void UpdateDrawFrame()
         camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };     
         camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };  
         BeginDrawing();
-            ClearBackground(RAYWHITE);
+            //ClearBackground(RAYWHITE);
+            ClearBackground(BLACK);
             BeginMode3D(camera);
                 rlPushMatrix();
                 rlRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-                DrawModelEx(model, position, (Vector3){ 1.0f, 0.0f, 0.0f }, 0.0f, (Vector3){ 1.75f, 1.75f, 1.75f }, WHITE);
+                //DrawModelEx(model, position, (Vector3){ 1.0f, 0.0f, 0.0f }, 0.0f, (Vector3){ 1.75f, 1.75f, 1.75f }, WHITE);
+                DrawModelEx(model, position, (Vector3){ 1.0f, 0.0f, 0.0f }, 0.0f, (Vector3){ 1.75f, 1.75f, 1.75f }, BLACK);
                 rlPopMatrix();                
-                DrawGrid(20, 10.0f);
+                //DrawGrid(20, 10.0f);
             EndMode3D();
             
-            DrawText(TextFormat("Camera x:%f y:%f z: %f", camera.position.x, camera.position.y, camera.position.z), 10, GetScreenHeight() - 20, 10, DARKGRAY);
-            DrawText(TextFormat("Target x:%f y:%f z:%f", camera.target.x, camera.target.y, camera.target.z), screenWidth - 200, screenHeight - 20, 10, GRAY);
+            //DrawText(TextFormat("Camera x:%f y:%f z: %f", camera.position.x, camera.position.y, camera.position.z), 10, GetScreenHeight() - 20, 10, DARKGRAY);
+            //DrawText(TextFormat("Target x:%f y:%f z:%f", camera.target.x, camera.target.y, camera.target.z), screenWidth - 200, screenHeight - 20, 10, GRAY);
             //DrawFPS(10, 10);
 
         EndDrawing();
