@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "raylib.h"
 #include "rlgl.h"
 #include "raymath.h"
@@ -7,6 +8,7 @@
 
 #define GLSL_VERSION            100
 
+RenderTexture2D convertRGBATexture2Map(Image encodedMap, bool flipTexture, RenderTexture2D decodedMapResult);
 void UpdateDrawFrame();
 
 Camera camera = { 0 };
@@ -15,6 +17,8 @@ const int screenHeight = 450;
 Model model = {0}; 
 Vector3 position = { 0.0f, 0.0f, 0.0f };    
 Shader lightingShader;
+Shader warpShader;
+Texture2D map;
 
 int main(void)
 {
@@ -66,6 +70,14 @@ int main(void)
     model.materials[0].shader = lightingShader;
     
 
+    Image mapTex = LoadImage("resources/maps/IpadProDistortionCalibrationMap.png");   // Load model texture (diffuse map)
+    RenderTexture2D decodedTex = LoadRenderTexture(mapTex.width, mapTex.height);
+    decodedTex = convertRGBATexture2Map(mapTex, true, decodedTex);
+    map = decodedTex.texture;
+
+    // Load postprocessing shader    
+    warpShader = LoadShader(TextFormat("resources/shaders/glsl%i/warp.vs", GLSL_VERSION), TextFormat("resources/shaders/glsl%i/warp.fs", GLSL_VERSION));    
+
     SetTargetFPS(60);
 
 
@@ -112,4 +124,37 @@ void UpdateDrawFrame()
             //DrawFPS(10, 10);
 
         EndDrawing();
+}
+
+RenderTexture2D convertRGBATexture2Map(Image encodedMap, bool flipTexture, RenderTexture2D decodedMapResult){
+
+        float mapDiv = 4095;
+        Color *encodedColor32 = LoadImageColors(encodedMap);
+        int arraySize = encodedMap.width * encodedMap.height;
+        static Color* mapColor;
+        mapColor = malloc(arraySize * sizeof(Color));
+        Color ec;
+        Vector4 tempColor;
+
+        int LOAD_TEX_COLOR_BIT_DEPTH = 8;
+        for (int pixel = 0; pixel < (encodedMap.width * encodedMap.height); ++pixel) {
+            ec = encodedColor32[pixel];
+
+            tempColor.x = ((ec.r << LOAD_TEX_COLOR_BIT_DEPTH) + ec.g) / mapDiv;
+            tempColor.y = ((ec.b << LOAD_TEX_COLOR_BIT_DEPTH) + ec.a) / mapDiv;
+         
+            if (flipTexture) {
+                tempColor.y = 1.0 - tempColor.y;
+            }
+
+            tempColor.w = 0.0;
+            tempColor.z = 0.0;
+            //takes format x y z w
+            mapColor[pixel] = ColorFromNormalized(tempColor);
+        }
+        
+
+        UpdateTexture(decodedMapResult.texture, mapColor);
+        UnloadImageColors(encodedColor32);
+        return decodedMapResult;
 }
