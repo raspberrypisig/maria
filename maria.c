@@ -1,7 +1,11 @@
 #include "raylib.h"
 #include "rlgl.h"
+#include "raymath.h"
 #include <emscripten/emscripten.h>
+#define RLIGHTS_IMPLEMENTATION
+#include "rlights.h"
 
+#define GLSL_VERSION            100
 
 void UpdateDrawFrame();
 
@@ -10,6 +14,7 @@ const int screenWidth = 800;
 const int screenHeight = 450;
 Model model = {0}; 
 Vector3 position = { 0.0f, 0.0f, 0.0f };    
+Shader lightingShader;
 
 int main(void)
 {
@@ -40,7 +45,26 @@ int main(void)
     Texture2D texture = LoadTexture("resources/models/Base_texture.png");    
     model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;            // Set map diffuse texture
 
-                    
+    Shader lightingShader = LoadShader(TextFormat("resources/shaders/glsl%i/base_lighting.vs", GLSL_VERSION),
+                               TextFormat("resources/shaders/glsl%i/lighting.fs", GLSL_VERSION));                   
+
+    // Get some required shader locations
+    lightingShader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(lightingShader, "viewPos");
+    // Ambient light level (some basic lighting)
+    int ambientLoc = GetShaderLocation(lightingShader, "ambient");
+    SetShaderValue(lightingShader, ambientLoc, (float[4]){ 2.5f, 2.5f, 2.5f, 1.0f }, SHADER_UNIFORM_VEC4);
+    // Create lights
+    Light lights[MAX_LIGHTS] = { 0 };
+
+    if (GLSL_VERSION == 330) {
+        lights[0] = CreateLight(LIGHT_POINT, (Vector3){ 0, 0, -50 }, Vector3Zero(), WHITE, lightingShader);
+    }
+    else {
+        lights[0] = CreateLight(LIGHT_POINT, (Vector3){ 0, 0, 50 }, Vector3Zero(), WHITE, lightingShader);
+    }
+
+    model.materials[0].shader = lightingShader;
+    
 
     SetTargetFPS(60);
 

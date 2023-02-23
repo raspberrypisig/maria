@@ -379,7 +379,8 @@ endif
 #------------------------------------------------------------------------------------------------
 #raylib_game.c removed
 PROJECT_SOURCE_FILES ?= \
-    maria.c
+    maria.c \
+    character.c
 
 # Define all object files from source files
 OBJS = $(patsubst %.c, %.o, $(PROJECT_SOURCE_FILES))
